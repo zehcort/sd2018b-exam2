@@ -1,3 +1,0 @@
-connexion==1.5.2
-docker
-flask
