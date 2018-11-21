@@ -1,20 +1,18 @@
-# Use an official Python runtime as a parent image
-FROM python:3.6-slim
+## Using a Docker image that have Python 3.6
 
-# Set the working directory to /app
-WORKDIR /app
+FROM python:3.6
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+## Upgrading pip and installing required libraries
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+RUN pip3.6 install --upgrade pip
+RUN pip3.6 install connexion[swagger-ui]
+RUN pip3.6 install --trusted-host pypi.python.org  docker[tls]
 
-# Make port 80 available to the world outside this container
-EXPOSE 80
+## Copying the content of the directory in the container folder 
 
-# Define environment variable
-ENV NAME World
+COPY ./handler_endpoint /handler_endpoint
 
-# Run app.py when the container launches
-CMD ["python", "app.py"]
+## Deploying app
+
+WORKDIR /handler_endpoint
+CMD ./deploy.sh
