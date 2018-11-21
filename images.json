@@ -1,0 +1,14 @@
+{
+  "images": [
+    {
+      "service_name": "postgresql",
+      "version": "1.0",
+      "type": "Docker"
+    },
+    {
+      "service_name": "httpd",
+      "version": "1.0",
+      "type": "Docker"
+    }
+  ]
+}
