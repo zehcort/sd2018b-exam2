@@ -15,7 +15,7 @@ def repository_merged():
     string = str(post_json_data, 'utf-8')
     jsonFile = json.loads(string)
     itWasMerged = jsonFile["pull_request"]["merged"]
-    domain = 'registry:443'
+    domain = 'registry:5000'
     if itWasMerged:
         pull_id = jsonFile["pull_request"]["head"]["sha"]
         json_image_url = 'https://raw.githubusercontent.com/zehcort/sd2018b-exam2/' + pull_id + '/images.json'
