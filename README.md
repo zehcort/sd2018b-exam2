@@ -45,7 +45,7 @@ la version y el tipo (Docker ó AMI) y en su lógica realice la construcción de
 
 * En lugar de una máquina virtual de CentOS7 para alojar el CI server,  emplear la imagen de Docker de Docker hub para el ejecución de la API (webhook listener) y la generación del artefacto: https://hub.Docker.com/_/Docker/ (**opcional**).
 
-![][14]
+![][0]
 **Figura 1**. Diagrama de Arquitectura de la solución
 
 ### Actividades
