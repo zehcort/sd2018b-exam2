@@ -5,10 +5,8 @@
 **Profesor:** Daniel Barragán C.  
 **Tema:** Construcción de artefactos para entrega continua  
 **Email:** daniel.barragan at correo.icesi.edu.co  
-**Estudiante:** Luis Alejandro Tróchez Arredondo
-
-**Código:** A00054648
-
+**Estudiante:** Luis Alejandro Tróchez Arredondo  
+**Código:** A00054648  
 **URL Git:** https://github.com/zehcort/sd2018b-exam2  
 
 ### Objetivos
