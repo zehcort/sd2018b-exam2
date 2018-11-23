@@ -1,78 +1,139 @@
-# sd2018b-exam2
-**Icesi University**  
-**Course:** Distributed Systems   
-**Professor:** Daniel Barragán C.  
-**Subject:** Artifact building for Continous Delivery  
+### sd2018b-exam2
+
+**Universidad Icesi**  
+**Curso:** Sistemas Distribuidos  
+**Profesor:** Daniel Barragán C.  
+**Tema:** Construcción de artefactos para entrega continua  
 **Email:** daniel.barragan at correo.icesi.edu.co  
-**Student:** Juan Camilo Swan.  
-**Student ID:** A00054620  
-**Git URL:** https://github.com/juanswan13/sd2018b-exam2.git  
+**Estudiante:** Luis Alejandro Tróchez Arredondo
+**ódigo:** A00054648
+**URL Git:** https://github.com/zehcort/sd2018b-exam2  
 
-## Expected results
-* Develop artifact automatic building for Continous Delivery  
-* Use libraries of programming languages to perform specific tasks   
-* Diagnose and execute the needed actions to achieve a stable infrastructure  
+### Objetivos
+* Realizar de forma autómatica la generación de artefactos para entrega continua
+* Emplear librerías de lenguajes de programación para la realización de tareas específicas
+* Diagnosticar y ejecutar de forma autónoma las acciones necesarias para corregir fallos en
+la infraestructura
 
-## Used technologies
-* Docker  
-* CentOS7 Box
-* Github Repository
+### Tecnlogías sugeridas para el desarrollo del examen
+* Docker
+* Box del sistema operativo CentOS7
+* Repositorio Github
 * Python3
-* Python3 Libraries: Flask, Fabric
-* Ngrok  
+* Librerias Python3: Flask, Connexion, Docker
+* Ngrok
 
-## Infrastructure diagram  
-The desired infrastructure to deploy consists in three Docker Containers and one Docker Client with the following settings:
+### Descripción
+Para la realización de la actividad tener en cuenta lo siguiente:
 
-* Python:3.6-slim CI Server: this CT has a Flask application with and endpoint using RESTful architecture best practices. The endpoint has the following logic:   
-  * A Webhook attached to a Pull Request triggers the endpoint.  
-  * The endpoint reads the Pull Request content and validates if the PR is mergedd  
-  * If merged, via the Docker Python SDK, the endpoint runs the required commands to build the Docker Artifact and push it to the local registry.  
-* wernight/ngrok Ngrok: this CT creates a temporary public domain name to expose the CI Server's endpoint.  
-* registry Registry: this CT is a private local registry where the created artifacts will be pushed.  
-* Windows 10 Home Docker Client: this Docker Client will be used to pull the private registry's artifacts.
+* Crear un Fork del repositorio sd2018b-exam2 y adicionar las fuentes de un microservicio
+de su elección.
+* Alojar en su fork un archivo Dockerfile para la construcción de un artefacto tipo Docker a
+partir de las fuentes de su microservicio.
 
+Deberá probar y desplegar los siguientes componentes:
 
-![][1]  
-**Figure 1**. Deploy Diagram  
+* Despliegue de un **registry** local de Docker para el almacenamiento de imágenes de Docker. Usar la imagen de DockerHub: https://hub.docker.com/_/registry/ . Probar que es posible descarga la imagen generada desde un equipo perteneciente a la red.
 
-## Introduction  
+* Realizar un método en Python3.6 o superior que reciba como entrada el nombre de un servicio,
+la version y el tipo (Docker ó AMI) y en su lógica realice la construcción de una imagen de Docker cuyo nombre deberá ser **service_name:version** y deberá ser publicada en el **registry** local creado en el punto anterior.
 
-The current branch contains two key elements to deploy the infrastructure. The first one is the docker-compose.yml. This file contains the provisioning required for each CT. The second one is the ci_server folder that contains the Dockerfile and python script to build the CI Server Docker image.
+* Realizar una integración con GitHub para que al momento de realizar un **merge** a la rama
+**develop**, se inicie la construcción de un artefacto tipo Docker a partir del Dockerfile y las fuentes del repositorio. Idee una estrategia para el envío del **service_name** y la **versión** a través del **webhook** de GitHub. La imagen generada deberá ser publicada en el **registry** local creado.
 
-### docker-compose.yml:
-the docker-compose.yml contains three services, that will be described above  
+* Si la construcción es exitosa/fallida debera actualizarse un **badge** que contenga la palabra build y la versión del artefacto creado mas recientemente (**opcional**).
 
-* **Registry:** This service refers to the private local Registry for Docker images that we are creating. It uses the a Docker image called Registry that Docker already provide to create this type of servers, it is attached to the port 443. It also has two self-signed SSL certificates created with OpenSSL. These certificates  allow the server to be secure and that clients can trust in it. they are located at ./certs.
+* En lugar de una máquina virtual de CentOS7 para alojar el CI server,  emplear la imagen de Docker de Docker hub para el ejecución de la API (webhook listener) y la generación del artefacto: https://hub.Docker.com/_/Docker/ (**opcional**).
+
+![][14]
+**Figura 1**. Diagrama de Arquitectura de la solución
+
+### Actividades
+1. Documento README.md en formato markdown:  
+  * Formato markdown (5%)
+  * Nombre y código del estudiante (5%)
+  * Ortografía y redacción (5%)
+2. Documentación del procedimiento para el montaje del registry (10%). Evidencias del funcionamiento (5%).
+3. Documentación e implementación del método para la generación del artefacto. Incluya el código fuente en el informe. Incluya comentarios en el código donde explique cada paso realizado (20%). Evidencias del funcionamiento (5%).
+4. Documentación e integración de un repositorio de GitHub junto con la generación del artefacto tipo Docker (20%). Evidencias del funcionamiento (5%).
+5. El informe debe publicarse en un repositorio de github el cual debe ser un fork de https://github.com/ICESI-Training/sd2018b-exam2 y para la entrega deberá hacer un Pull Request (PR) al upstream (10%). Tenga en cuenta que el repositorio debe contener todos los archivos necesarios para el aprovisionamiento
+7. Documente algunos de los problemas encontrados y las acciones efectuadas para su solución al aprovisionar la infraestructura y aplicaciones (10%)
+
+### Introducción
+
+Para la implementación de la solución se emplean 3 ramas: una donde estarán los servicios, otra donde esté el contenido del registry y otra vacía donde se pueda probar el merge del repositorio.
+
+En la rama donde están los servicios están contenidos dos elementos clave para implementar la infraestructura. El primero es el docker-compose.yml, archivo donde se describe el aprovisionamiento requerido para cada CT. La segunda es la carpeta ci_server que contiene el script Dockerfile y python para crear la imagen de CI Server Docker, el cual permitirá dar el componente de Integración Continua a la solución.
+
+### Desarrollo
+
+A continuación se muestran algunos de los archivos utilizados en la implementación
+
+* docker-compose.yml
+
 ```
-swan-registry.icesi.edu.co:
+version: '3'
+services:
+    registry:
         image: registry:2
-        container_name: swan-registry.icesi.edu.co
+        container_name: registry
         volumes:
-            - './docker_data/certs:/certs'
+            - ./registry/certs/:/certs
         environment:
-            - 'REGISTRY_HTTP_ADDR=0.0.0.0:443'
-            - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt
-            - REGISTRY_HTTP_TLS_KEY=/certs/domain.key
+            - 'REGISTRY_HTTP_ADDR=0.0.0.0:5000'
+            - REGISTRY_HTTP_TLS_CERTIFICATE=./certs/domain.crt
+            - REGISTRY_HTTP_TLS_KEY=./certs/domain.key
         ports:
-            - '443:443'
-```
-* **ngrok:** This refers to the Ngrok service. It uses the wernight/ngrok Docker image, attached to the 4040 port and it's linked to ci_server in its 80 port to expose the CI Server's endpoint.
-```
+            - '5000:5000'
+    ci_server:
+        build: ci_server
+        container_name: ci_server
+        environment:
+            - 'CI_SERVER_HTTP_ADDR=0.0.0.0:8080'
+        ports:
+            - '8080:8080'
     ngrok:
         image: wernight/ngrok
         ports:
             - 0.0.0.0:4040:4040
         links:
-            - ci_server_swan
+            - ci_server
         environment:
-            NGROK_PORT: ci_server_swan:8080
+            NGROK_PORT: ci_server:8080
+
 ```
-* **ci_server:** The ci_server contains two components to be deployed. First, it has the Dockerfile to build a proper image and the endpoind that is develop in python 3 and using the conexion libraries.
-The endpoint manage the GitHub WebHook JSON and deside if the PR made in the repository was a merge, if not it return that it was not a merge, but if the repositry was merged the endpoint search for the new images added to the repository, build them and push the images to the Registry server. This endpoint can manage the PR of many images by using a well organiced JSON and the diferent images created each in one diferent folder.
-* Python: handlers.py:
+
+* Dockerfile ci_server: archivo en base al cual se construye la imagen para el contenedor del servicio encargado de la Integración Continua. Aquí se utiliza una imagen con Python 3.6, ya que se requieren instalar librerias Python con facilidad.
+
 ```
-`import os
+## Using a Docker image that have Python 3.6
+
+FROM python:3.6
+
+## Upgrading pip and installing required libraries
+
+RUN pip3.6 install --upgrade pip
+RUN pip3.6 install connexion[swagger-ui]
+RUN pip3.6 install --trusted-host pypi.python.org  docker[tls]
+
+## Copying the content of the directory in the container folder
+
+COPY ./handler_endpoint /handler_endpoint
+RUN ["chmod", "+x", "/handler_endpoint/deploy.sh"]
+
+## Deploying app
+
+WORKDIR /handler_endpoint
+CMD ./deploy.sh
+
+```
+
+* handlers.py: aquí se ubica el método que permite recibir los PR, extraer su información y mandar los nuevos artefactos al Registry
+
+A continuación se muestra el archivo app.py. En el se hace uso de librerías docker, flask, entre otras.
+
+```
+import os
 import logging
 import requests
 import json
@@ -89,10 +150,10 @@ def repository_merged():
     string = str(post_json_data, 'utf-8')
     jsonFile = json.loads(string)
     itWasMerged = jsonFile["pull_request"]["merged"]
-    domain = 'swan-registry.icesi.edu.co:443'
+    domain = 'registry:5000'
     if itWasMerged:
         pull_id = jsonFile["pull_request"]["head"]["sha"]
-        json_image_url = 'https://raw.githubusercontent.com/juanswan13/sd2018b-exam2/' + pull_id + '/images.json'
+        json_image_url = 'https://raw.githubusercontent.com/zehcort/sd2018b-exam2/' + pull_id + '/images.json'
         json_image_response = requests.get(json_image_url)
         images_json = json.loads(json_image_response.content)
         for service in images_json["images"]:
@@ -100,7 +161,7 @@ def repository_merged():
             image_type = service["type"]
             image_version = service["version"]
             if image_type == 'Docker':
-                image_url = 'https://raw.githubusercontent.com/juanswan13/sd2018b-exam2/' + pull_id + '/' + service_name + '/Dockerfile'
+                image_url = 'https://raw.githubusercontent.com/zehcort/sd2018b-exam2/' + pull_id + '/' + service_name + '/Dockerfile'
                 file_response=requests.get(image_url)
                 file = open("Dockerfile","w")
                 file.write(str(file_response.content, 'utf-8'))
@@ -112,7 +173,7 @@ def repository_merged():
                 client.images.remove(image=image_tag, force=True)
                 retorno = image_tag + " - " + retorno
             elif image_type == 'AMI':
-                image_url = 'https://raw.githubusercontent.com/juanswan13/sd2018b-exam2/' + pull_id + '/' + service_name + '/AMI'
+                image_url = 'https://raw.githubusercontent.com/zehcort/sd2018b-exam2/' + pull_id + '/' + service_name + '/AMI'
                 file_response=requests.get(image_url)
                 file = open("AMI","w")
                 file.write(str(file_response.content, 'utf-8'))
@@ -126,117 +187,73 @@ def repository_merged():
     else:
         result = {'command_return': 'Pull request was not merged'}
     return result
- ```
- * Dockerfile:
-  ```
-  FROM python:3.6
 
-
-RUN pip3.6 install --upgrade pip
-RUN pip3.6 install connexion[swagger-ui]
-RUN pip3.6 install --trusted-host pypi.python.org  docker[tls]
-
-
-COPY ./handler_endpoint /handler_endpoint
-
-
-WORKDIR /handler_endpoint
-
-CMD ./deploy.sh
 ```
-* Data in docker-compose:
+
+* registry: este servicio hace referencia al registro local privado. Hace uso de la imagen del registry de docker y se le proporciona al al puerto 5000. Se necesitan los certificados SSL para la seguridad del servidor. Los certificados se guardan en ./certs.
+
+Primero se crea un directorio donde se van a almacenar los certificados de seguridad. Estos deben ser generados en el montaje de la infraestructura. Esto se realizó de la siguiente manera:
+
 ```
-    ci_server_swan:
-        build: ci_server
-        container_name: ci_server_swan
-        environment:
-            - 'CI_SERVER_HTTP_ADDR=0.0.0.0:8080'
-        ports:
-            - '8080:8080'
+ openssl req -newkey rsa:4096 -nodes -sha256 -keyout `pwd`/certs/domain.key -x509 -days 365 -out `pwd`/certs/domain.crt
+
 ```
-## Deployment
-Run the following command in the repository folder:
+
+* ngrok: este utiliza la imagen de Docker wernight/ngrok. Con esta implementación se puede acceder a los enlaces generados a través de una interfaz gráfica. Aquí es donde se expone el endpoint (ci_server); se hace en el puerto 4040 y se conecta con el ci_server en su puerto 8000.
+
+### Prueba de la infraestructura
+
+Primero se inicia la compilación de los servicios de la siguiente manera:
+
 ```
 docker-compose up --build
-```
-This command will start the build of each of the services specified previously. It has the --build parameter to run it and see the console of what are the services doing. When the services are deployed, you will get an output like this:  
 
-![][2]  
-**Figure 2**. Docker Containers created
-
-Now, open Ngrok by opening Web UI in the browser. here go to the url 0.0.0.0:4040.  
-
-![][3]  
-**Figure 3**. Ngrok running
-
-Finally, let's create the Github webhook. In the repository, go to *Settings -> Webhooks*. Add a webhook and put in the Payload URL the URL that ngrok proviudes and the endpoint url.
-
-![][4]  
-**Figure 4**. Github Webhook working
-
-## Demonstration  
-
-To show that the exam works well, two more branches were created, one named jcswan/develop where i create a JSON and two folders, and inside each folder one vagrant file. this JSON format is the following:
 ```
 
-{
-  "images": [
-    {
-      "service_name": "postgresql",
-      "version": "1.0",
-      "type": "Docker"
-    },
-    {
-      "service_name": "httpd",
-      "version": "1.0",
-      "type": "Docker"
-    }
-  ]
-}
-```
-So is easy to recognize that two images are going to be generated. The next step is to make the pull request of this branch to the branch of develop. this will make the endpoint to activate but it will say that the repository was not merged; this is because at this point we haven't merged it.
+Una vez hecho esto, se muestra la infraestructura corriendo
 
-![][5]  
-**Figure 5**. PR Created.
+![][1]
+**Figura 2**. Consola con el servicio corriendo
 
-![][6]  
-**Figure 6**. Webhook working.
+Seguido de esto, se debe configurar el Webhook en Github. Esto servirá como trigger para que el endpoint funcione una vez realizado el PR de Merge
 
-Then we go again to the PR and click to the buttom **merge**. this will make the webhook to activate again and this time the endpoint will recognize that the PR was merged so it will catch the images, build them and push them to the registry.
+![][2]
+**Figura 3**. Configuración del Webhook
 
-![][7]  
-**Figure 7**. PR Merged.
+Aquí se debe ajustar que se va a recibir la información en un formato JSON y una vez el repositorio un Pull Request
 
-![][8]  
-**Figure 8**. CI Server answering.
+![][3]
+**Figura 4**. Ajuste de parámetros del Webhook
 
-![][9]  
-**Figure 9**. OK-200 response from CI. (and the name of the services and the registry domain can be seen in the return).
+Una vez listo el entorno, se crea el PR con origen en la rama vacía Develop hacia la rama Develop/exam2   
 
-![][10]  
-**Figure 10**. Previous the PR was merged the registry has no images.
+![][4]
+**Figura 5**. Pull Request creado
 
-![][11]  
-**Figure 11**. Now we can pull one image of those that the endpoint generate.
+Aquí vemos en el Ngrok el último código (200) de éxito del servicio de Integración continua
 
-## References  
-* https://docker-py.readthedocs.io/en/stable/
-* https://www.learnitguide.net/2018/07/create-your-own-private-docker-registry.html
-* https://www.youtube.com/watch?v=SEpR35HZ_hQ
-* https://forums.docker.com/t/running-an-insecure-registry-insecure-registry/8159/5
+![][5]
+**Figura 6**. Código exitoso en el Ngrok
+
+Por último, podremos realizar el merge correctamente de manera manual desde el repositorio de Github
+
+### Dificultades
+
+La principal dificultad que se tuvo en la realización de esta solución fue lograr conectar correctamente el ci_server con el registry, ya que dependía de tener configurado el puerto por donde se conectan, además de poder implementar correctamente esto en el método handlers.py.
+Adicional a esto, inicialmente también represento una dificultad la integración de las nuevas tecnologías, como Docker, a la solución y entender el funcionamiento de un contenedor.
+
+### Referencias
 * https://hub.docker.com/_/registry/
 * https://hub.docker.com/_/docker/
-* https://github.com/juanswan13/sd2018b-exam1/tree/jswan/exam1
-* https://raw.githubusercontent.com/abc1196/sd2018b-exam2/abueno/exam2/README.md
+* https://docker-py.readthedocs.io/en/stable/index.html
+* https://developer.github.com/v3/guides/building-a-ci-server/
+* http://flask.pocoo.org/
+* https://connexion.readthedocs.io/en/latest/
 
-[1]: images/01_diagrama_delivery.png
-[2]: images/docker-compose.png
-[3]: images/ngrok-running.png
-[4]: images/Webhook-creation.png  
-[5]: images/Pr-Created.png
-[6]: images/action_generated_by_pr_generation.png
-[7]: images/PR-Merged.png
-[8]: images/ci-server-answering.png
-[9]: images/ok-response-from-ci.png
-[10]: images/no-images-in-mirror.png
-[11]: images/image-pulled.png
+
+[0]: images/0.png
+[1]: images/1.png
+[2]: images/2.png
+[3]: images/3.png
+[4]: images/4.png
+[5]: images/5.png
