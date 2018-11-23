@@ -6,7 +6,9 @@
 **Tema:** Construcción de artefactos para entrega continua  
 **Email:** daniel.barragan at correo.icesi.edu.co  
 **Estudiante:** Luis Alejandro Tróchez Arredondo
-**ódigo:** A00054648
+
+**Código:** A00054648
+
 **URL Git:** https://github.com/zehcort/sd2018b-exam2  
 
 ### Objetivos
